@@ -2,7 +2,6 @@ apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
   name: zephyr-7b-beta
-  namespace: weave-ai
   labels:
     artifact-kind: language-model
 spec:

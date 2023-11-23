@@ -35,6 +35,14 @@ Installing Flux. We have to disable network policy in Flux for now to allow the 
 flux install --network-policy=false
 ```
 
+Create Weave AI namespace if does not exist
+
 ```shell
-kubectl apply -k url
+kubectl create ns weave-ai
+```
+
+Install the model catalog
+
+```shell
+kubectl -n weave-ai apply -k https://github.com/weave-ai/weave-ai//models
 ```

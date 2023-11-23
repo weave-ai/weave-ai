@@ -2,7 +2,6 @@ apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
   name: tinyllama-1.1b-chat
-  namespace: weave-ai
   labels:
     artifact-kind: language-model
 spec:
