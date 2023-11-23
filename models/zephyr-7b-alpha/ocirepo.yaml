@@ -1,0 +1,16 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: zephyr-7b-alpha
+  namespace: weave-ai
+  labels:
+    artifact-kind: language-model
+spec:
+  suspend: true # set this to false to build this LLM artifact
+  interval: 10m
+  url: oci://ghcr.io/weave-ai/models/zephyr-7b-alpha-8k
+  ref:
+    tag: v1.0.0-q5km-gguf
+  layerSelector:
+    mediaType: "application/vnd.cncf.flux.content.v1.tar+gzip"
+    operation: copy

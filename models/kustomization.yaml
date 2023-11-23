@@ -1,0 +1,12 @@
+resources:
+- ./dragon-yi-6b/ocirepo.yaml
+- ./llama-2-7b-chat/ocirepo.yaml
+- ./llama-2-7b-instruct-32k/ocirepo.yaml
+- ./mistral-7b-instruct-v0.1/ocirepo.yaml
+- ./mistral-7b-v0.1/ocirepo.yaml
+- ./mistrallite-7b/ocirepo.yaml
+- ./orca-2-7b/ocirepo.yaml
+- ./tinyllama-1.1b-chat/ocirepo.yaml
+- ./yarn-mistral-7b-128k/ocirepo.yaml
+- ./zephyr-7b-alpha/ocirepo.yaml
+- ./zephyr-7b-beta/ocirepo.yaml

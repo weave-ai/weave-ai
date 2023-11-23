@@ -1,0 +1,14 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: llama-2-7b-instruct-32k
+  namespace: weave-ai
+spec:
+  suspend: true # set this to false to build this LLM artifact
+  interval: 10m
+  url: oci://ghcr.io/weave-ai/models/llama-2-7b-instruct-32k
+  ref:
+    tag: v1.0.0-q5km-gguf
+  layerSelector:
+    mediaType: "application/vnd.cncf.flux.content.v1.tar+gzip"
+    operation: copy
