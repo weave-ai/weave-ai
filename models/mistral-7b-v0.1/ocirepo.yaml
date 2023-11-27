@@ -3,7 +3,7 @@ kind: OCIRepository
 metadata:
   name: mistral-7b-v0.1
   labels:
-    artifact-kind: language-model
+    ai.contrib.fluxcd.io/artifact-kind: language-model    
 spec:
   suspend: true # set this to false to build this LLM artifact
   interval: 10m

@@ -2,6 +2,8 @@ apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
   name: llama-2-7b-instruct-32k
+  labels:
+    ai.contrib.fluxcd.io/artifact-kind: language-model
 spec:
   suspend: true # set this to false to build this LLM artifact
   interval: 10m

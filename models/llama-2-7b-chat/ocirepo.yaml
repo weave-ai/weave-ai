@@ -3,7 +3,7 @@ kind: OCIRepository
 metadata:
   name: llama-2-7b-chat
   labels:
-    artifact-kind: language-model
+    ai.contrib.fluxcd.io/artifact-kind: language-model
 spec:
   suspend: true # set this to false to build this LLM artifact
   interval: 10m

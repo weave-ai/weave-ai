@@ -3,7 +3,7 @@ kind: OCIRepository
 metadata:
   name: yarn-mistral-7b-128k
   labels:
-    artifact-kind: language-model
+    ai.contrib.fluxcd.io/artifact-kind: language-model    
 spec:
   suspend: true # set this to false to build this LLM artifact
   interval: 10m
