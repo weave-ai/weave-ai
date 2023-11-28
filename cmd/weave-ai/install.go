@@ -29,7 +29,7 @@ weave-ai install
 }
 
 var installFlags struct {
-	// version   string
+	version string
 	// dev       bool
 	// anonymous bool
 	export bool
@@ -38,7 +38,7 @@ var installFlags struct {
 }
 
 func init() {
-	// installCmd.Flags().StringVarP(&installFlags.version, "version", "v", Version, "version of Weave AI to install")
+	installCmd.Flags().StringVarP(&installFlags.version, "version", "v", Version, "version of Weave AI to install")
 	installCmd.Flags().BoolVar(&installFlags.export, "export", false, "export manifests instead of installing")
 	installCmd.Flags().BoolVar(&installFlags.withModelCatalog, "with-model-catalog", true, "install the model catalog")
 
@@ -65,7 +65,7 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		}
 	*/
 
-	if err := installControllers(installFlags.export, installFlags.withModelCatalog); err != nil {
+	if err := installControllers(installFlags.export, installFlags.version, installFlags.withModelCatalog); err != nil {
 		return err
 	}
 
@@ -118,7 +118,7 @@ func verifyTheInstallation() error {
 	return nil
 }
 
-func installControllers(export bool, withModelCatalog bool) error {
+func installControllers(export bool, version string, withModelCatalog bool) error {
 	logger.Generatef("generating manifests")
 
 	var tpl bytes.Buffer
@@ -129,8 +129,10 @@ func installControllers(export bool, withModelCatalog bool) error {
 
 	if err := t.Execute(&tpl, struct {
 		ModelCatalog bool
+		Version      string
 	}{
 		ModelCatalog: withModelCatalog,
+		Version:      version,
 	}); err != nil {
 		return err
 	}
