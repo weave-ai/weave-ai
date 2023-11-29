@@ -30,18 +30,19 @@ weave-ai install
 }
 
 var installFlags struct {
-	version string
-	// dev       bool
-	// anonymous bool
-	export bool
-	// mode      string
-	withModelCatalog bool
+	version           string
+	export            bool
+	withModelCatalog  bool
+	withDefaultTenant bool
+	defaultTenantNs   string
 }
 
 func init() {
 	installCmd.Flags().StringVarP(&installFlags.version, "version", "v", Version, "version of Weave AI to install")
 	installCmd.Flags().BoolVar(&installFlags.export, "export", false, "export manifests instead of installing")
 	installCmd.Flags().BoolVar(&installFlags.withModelCatalog, "with-model-catalog", true, "install the model catalog")
+	installCmd.Flags().BoolVar(&installFlags.withDefaultTenant, "with-default-tenant", true, "install the default tenant")
+	installCmd.Flags().StringVar(&installFlags.defaultTenantNs, "default-tenant-namespace", "default", "namespace to install a tenant")
 
 	rootCmd.AddCommand(installCmd)
 }
@@ -51,7 +52,12 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.stderr = io.Discard
 	}
 
-	if err := installControllers(installFlags.export, installFlags.version, installFlags.withModelCatalog); err != nil {
+	if err := installControllers(
+		installFlags.export,
+		installFlags.version,
+		installFlags.withModelCatalog,
+		installFlags.withDefaultTenant,
+		installFlags.defaultTenantNs); err != nil {
 		return err
 	}
 
@@ -105,7 +111,7 @@ func verifyTheInstallation() error {
 	return nil
 }
 
-func installControllers(export bool, version string, withModelCatalog bool) error {
+func installControllers(export bool, version string, withModelCatalog bool, withDefaultTenant bool, defaultTenantNs string) error {
 	logger.Generatef("generating manifests")
 
 	var tpl bytes.Buffer
@@ -115,11 +121,13 @@ func installControllers(export bool, version string, withModelCatalog bool) erro
 	}
 
 	if err := t.Execute(&tpl, struct {
-		ModelCatalog bool
-		Version      string
+		WithModelCatalog  bool
+		WithDefaultTenant bool
+		Version           string
 	}{
-		ModelCatalog: withModelCatalog,
-		Version:      version,
+		WithModelCatalog:  withModelCatalog,
+		WithDefaultTenant: withDefaultTenant,
+		Version:           version,
 	}); err != nil {
 		return err
 	}
@@ -132,21 +140,13 @@ func installControllers(export bool, version string, withModelCatalog bool) erro
 	namespacePath := "/app/namespace.yaml"
 	fSys.WriteFile(namespacePath, []byte(fmt.Sprintf(namespaceTemplate, *kubeconfigArgs.Namespace)))
 
-	/*
-		clusterPath := "/app/cluster.yaml"
-		if installMode == TenantMode {
-			fSys.WriteFile(clusterPath, []byte(
-				fmt.Sprintf(defaultClusterSecretTemplate,
-					kubeconfigArgs.Namespace,
-					kubeconfigArgs.Namespace,
-					kubeconfigArgs.Namespace,
-					kubeconfigArgs.Namespace,
-					kubeconfigArgs.Namespace,
-				)))
-		} else {
-			fSys.WriteFile(clusterPath, []byte("# empty"))
-		}
-	*/
+	if withDefaultTenant {
+		defaultTenant := "/app/default_tenant.yaml"
+		fSys.WriteFile(defaultTenant, []byte(fmt.Sprintf(defaultTenantTemplate,
+			defaultTenantNs,
+			defaultTenantNs,
+			defaultTenantNs)))
+	}
 
 	opts := krusty.MakeDefaultOptions()
 	opts.Reorder = krusty.ReorderOptionLegacy
