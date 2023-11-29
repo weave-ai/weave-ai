@@ -14,7 +14,7 @@ resources:
 - "https://github.com/weave-ai/lm-controller/releases/download/v0.8.0/lm-controller.rbac.yaml"
 - "https://github.com/weave-ai/lm-controller/releases/download/v0.8.0/lm-controller.deployment.yaml"
 {{- if .ModelCatalog }}
-- "https://github.com/weave-ai/weave-ai/releases/download/{{ .Version }}/model-catalog.yaml"
+- "https://github.com/weave-ai/weave-ai/releases/download/v{{ .Version }}/model-catalog.yaml"
 {{- end }}
 `
 
