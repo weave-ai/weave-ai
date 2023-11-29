@@ -27,13 +27,18 @@ var runCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Short: "Deploy and run an LLM",
 	Long: `
-# Deploy and run an LLM, e.g. zephyr-7b-beta, in the default namespace
+# Deploy and run an LLM, e.g. zephyr-7b-beta, in the default namespace.
+# The default model namespace is weave-ai.
 weave-ai run zephyr-7b-beta
 
-# Deploy and run an LLM, e.g. zephyr-7b-beta from the weave-ai model namespace, in the default namespace
+# Deploy and run an LLM, e.g. zephyr-7b-beta, in the default namespace as my-llm.
+# The default model namespace is weave-ai.
+weave-ai run --name=my-llm zephyr-7b-beta
+
+# Deploy and run an LLM, e.g. zephyr-7b-beta from the weave-ai model namespace, in the default namespace.
 weave-ai run weave-ai/zephyr-7b-beta
 
-# Deploy and run an LLM, e.g. zephyr-7b-beta, in the default namespace and publish it as a LoadBalancer service
+# Deploy and run an LLM, e.g. zephyr-7b-beta, in the default namespace and publish it as a LoadBalancer service.
 weave-ai run -p -d weave-ai/zephyr-7b-beta
 `,
 	RunE: runCmdRun,
