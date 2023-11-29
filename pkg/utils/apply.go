@@ -13,6 +13,7 @@ import (
 	"github.com/fluxcd/pkg/ssa"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	aiv1a1 "github.com/weave-ai/lm-controller/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -107,6 +108,7 @@ func NewScheme() *apiruntime.Scheme {
 	_ = sourcev1b2.AddToScheme(scheme)
 	_ = kustomizev1.AddToScheme(scheme)
 	_ = helmv2b1.AddToScheme(scheme)
+	_ = aiv1a1.AddToScheme(scheme)
 	return scheme
 }
 

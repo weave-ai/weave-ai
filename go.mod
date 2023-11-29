@@ -11,6 +11,7 @@ require (
 	github.com/fluxcd/source-controller/api v1.1.2
 	github.com/go-logr/logr v1.3.0
 	github.com/spf13/cobra v1.8.0
+	github.com/weave-ai/lm-controller/api v0.0.0-20231127105518-27b366bfbb7c
 	k8s.io/api v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
 	k8s.io/apimachinery v0.28.4
