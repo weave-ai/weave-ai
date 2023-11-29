@@ -50,27 +50,14 @@ func installCmdRun(cmd *cobra.Command, args []string) error {
 		logger.stderr = io.Discard
 	}
 
-	/*
-		if installFlags.version == "" {
-			return cmd.Help()
-		}
-		if strings.HasSuffix(installFlags.version, "-dev") {
-			installFlags.dev = true
-		}
-
-		// prefix version with "v" if it doesn't start with it
-		// so we can use this command like this: flamingo install -v2.0.0
-		if strings.HasPrefix(installFlags.version, "v") == false {
-			installFlags.version = "v" + installFlags.version
-		}
-	*/
-
 	if err := installControllers(installFlags.export, installFlags.version, installFlags.withModelCatalog); err != nil {
 		return err
 	}
 
-	if err := verifyTheInstallation(); err != nil {
-		return err
+	if !installFlags.export {
+		if err := verifyTheInstallation(); err != nil {
+			return err
+		}
 	}
 
 	return nil
