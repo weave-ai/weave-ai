@@ -24,7 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *runclient.Options, resources []byte) (string, error) {
+type ChangeSetFilter func(ssa.ChangeSetEntry) (wait bool)
+
+func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *runclient.Options, resources []byte, filter ChangeSetFilter) (string, error) {
 	objs, err := ssa.ReadObjects(bytes.NewReader(resources))
 	if err != nil {
 		return "", err
@@ -76,6 +78,15 @@ func Apply(ctx context.Context, rcg genericclioptions.RESTClientGetter, opts *ru
 		changeSet.Append(cs.Entries)
 	}
 
+	// allow to filter some resources, that we don't want to wait for, out
+	var waitFor []ssa.ChangeSetEntry
+	for _, e := range changeSet.Entries {
+		if filter(e) {
+			waitFor = append(waitFor, e)
+		}
+	}
+	changeSet.Entries = waitFor
+
 	if len(changeSet.Entries) > 0 {
 		if err := waitForSet(rcg, opts, changeSet); err != nil {
 			return "", err
@@ -115,8 +126,8 @@ func newManager(rcg genericclioptions.RESTClientGetter, opts *runclient.Options)
 	kubePoller := polling.NewStatusPoller(kubeClient, restMapper, polling.Options{})
 
 	return ssa.NewResourceManager(kubeClient, kubePoller, ssa.Owner{
-		Field: "flamingo",
-		Group: "flamingo.io",
+		Field: "weave-ai",
+		Group: "weave-ai.io",
 	}), nil
 
 }

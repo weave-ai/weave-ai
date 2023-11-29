@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/fluxcd/pkg/ssa"
 	"io"
 	"os"
 	"text/template"
@@ -88,7 +89,6 @@ func verifyTheInstallation() error {
 		return fmt.Errorf("install failed: %w", err)
 	}
 
-	// we install Argo CD components in the application namespace (argocd), not the flux-system namespace
 	objectRefs, err := buildComponentObjectRefs(
 		*kubeconfigArgs.Namespace,
 		"lm-controller",
@@ -173,7 +173,14 @@ func installControllers(export bool, version string, withModelCatalog bool) erro
 
 	ctx, cancelFn := context.WithTimeout(context.Background(), rootArgs.timeout)
 	defer cancelFn()
-	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, yamlOutput)
+
+	applyOutput, err := utils.Apply(ctx, kubeconfigArgs, kubeclientOptions, yamlOutput, func(e ssa.ChangeSetEntry) (wait bool) {
+		wait = true
+		if e.ObjMetadata.GroupKind.Kind == "OCIRepository" {
+			wait = false
+		}
+		return
+	})
 	if err != nil {
 		return fmt.Errorf("install failed: %w", err)
 	}

@@ -57,7 +57,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 10*time.Minute, "timeout for this operation")
+	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 2*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
 
 	configureDefaultNamespace()
