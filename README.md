@@ -17,6 +17,7 @@ brew install weave-ai/tap/weave-ai
 ### Quick Start
 
 Prerequisites: Please install Kubernetes v1.27+ and Flux v2.1.0+ before proceeding.
+Minimum requirements of the Kubernetes cluster are 8 CPUs and 16GB of memory with 100GB of SSD storage.
 
 ```shell
 flux install --network-policy=false
