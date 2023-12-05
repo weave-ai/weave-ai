@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"text/template"
+
 	"github.com/fluxcd/pkg/ssa"
 	"github.com/spf13/cobra"
 	"github.com/weave-ai/weave-ai/pkg/utils"
-	"os"
-	"text/template"
 )
 
 var createLmCmd = &cobra.Command{

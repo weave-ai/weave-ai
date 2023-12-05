@@ -51,7 +51,7 @@ func listModelsCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "NAME\tVERSION\tFAMILY\tSTATUS\tCREATE\n")
+	fmt.Fprintf(w, "NAME\tVERSION\tFAMILY\tSTATUS\tCREATED\n")
 	for _, model := range models.Items {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			model.Namespace+"/"+model.Name,
