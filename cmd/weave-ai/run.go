@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/spf13/cobra"
 	aiv1a1 "github.com/weave-ai/lm-controller/api/v1alpha1"
 	namesgenerator "github.com/weave-ai/weave-ai/pkg/namegenerator"
@@ -132,57 +131,9 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Actionf("checking if model %s/%s exists and is active", runFlags.modelNamespace, runFlags.modelName)
-	// check the model exists
-	model := &sourcev1b2.OCIRepository{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "OCIRepository",
-			APIVersion: "source.toolkit.fluxcd.io/v1beta1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runFlags.modelName,
-			Namespace: runFlags.modelNamespace,
-		},
-	}
-
-	// check the model is ready
-	if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(model), model); err != nil {
+	if err := activateModel(ctx, client, runFlags.modelNamespace, runFlags.name, true); err != nil {
 		return err
 	}
-	// try to activate the model if it's not active
-	if model.Spec.Suspend == true {
-		logger.Actionf("activate model %s/%s", runFlags.modelNamespace, runFlags.modelName)
-		model.Spec.Suspend = false
-		if err := client.Update(ctx, model); err != nil {
-			return err
-		}
-
-		logger.Waitingf("waiting for model %s/%s to be active", runFlags.modelNamespace, runFlags.modelName)
-	}
-
-	waitCtx, waitCancel := context.WithCancel(ctx)
-	wait.UntilWithContext(waitCtx, func(ctx context.Context) {
-		if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(model), model); err != nil {
-			return
-		}
-		if model.Status.Artifact == nil {
-			return
-		}
-		if model.Status.Artifact.URL == "" {
-			return
-		}
-		cond := apimeta.FindStatusCondition(model.Status.Conditions, fluxmeta.ReadyCondition)
-		if cond == nil {
-			return
-		}
-		if cond.Status != metav1.ConditionTrue {
-			return
-		}
-		if model.Status.Artifact.URL != "" {
-			waitCancel()
-		}
-	}, 2*time.Second)
-	// TODO if it's not ready after 5 minutes, return an error
 
 	logger.Actionf("creating new LLM instance %s/%s", runFlags.namespace, lmName)
 	if err := client.Create(ctx, lm); err != nil {
@@ -190,7 +141,7 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Waitingf("waiting for %s/%s to be ready", runFlags.namespace, lmName)
-	waitCtx, waitCancel = context.WithCancel(ctx)
+	waitCtx, waitCancel := context.WithCancel(ctx)
 	wait.UntilWithContext(waitCtx, func(ctx context.Context) {
 		if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(lm), lm); err != nil {
 			return
