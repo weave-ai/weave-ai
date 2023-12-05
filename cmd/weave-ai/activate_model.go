@@ -100,6 +100,9 @@ func activateModel(ctx context.Context, client runtimeclient.Client, namespace s
 		if err := client.Update(ctx, model); err != nil {
 			return err
 		}
+	} else {
+		logger.Successf("model %s/%s is already active", namespace, name)
+		return nil
 	}
 
 	if waitFlag {
