@@ -6,7 +6,8 @@ All notable changes to this project are documented in this file.
 
 **Release date:** <TBD>
 
-- Add `stableml-zephyr-3b` to the model catalog
+- Add `stablelm-zephyr-3b` to the model catalog
+- Fix isActive logic in the model activation process
 
 ## v0.10.0
 
