@@ -131,7 +131,7 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := activateModel(ctx, client, runFlags.modelNamespace, runFlags.name, true); err != nil {
+	if err := activateModel(ctx, client, runFlags.modelNamespace, runFlags.modelName, true); err != nil {
 		return err
 	}
 

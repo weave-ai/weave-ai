@@ -100,7 +100,9 @@ func activateModel(ctx context.Context, client runtimeclient.Client, namespace s
 		if err := client.Update(ctx, model); err != nil {
 			return err
 		}
-	} else {
+	}
+
+	if isActive(model) {
 		logger.Successf("model %s/%s is already active", namespace, name)
 		return nil
 	}
@@ -113,20 +115,9 @@ func activateModel(ctx context.Context, client runtimeclient.Client, namespace s
 			if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(model), model); err != nil {
 				return
 			}
-			if model.Status.Artifact == nil {
+			if isActive(model) == false {
 				return
-			}
-			if model.Status.Artifact.URL == "" {
-				return
-			}
-			cond := apimeta.FindStatusCondition(model.Status.Conditions, fluxmeta.ReadyCondition)
-			if cond == nil {
-				return
-			}
-			if cond.Status != metav1.ConditionTrue {
-				return
-			}
-			if model.Status.Artifact.URL != "" {
+			} else {
 				waitCancel()
 			}
 		}, 2*time.Second)
@@ -135,4 +126,25 @@ func activateModel(ctx context.Context, client runtimeclient.Client, namespace s
 	// TODO if it's not ready after 5 minutes, return an error
 
 	return nil
+}
+
+func isActive(model *sourcev1b2.OCIRepository) bool {
+	if model.Status.Artifact == nil {
+		return false
+	}
+	if model.Status.Artifact.URL == "" {
+		return false
+	}
+	cond := apimeta.FindStatusCondition(model.Status.Conditions, fluxmeta.ReadyCondition)
+	if cond == nil {
+		return false
+	}
+	if cond.Status != metav1.ConditionTrue {
+		return false
+	}
+	if model.Status.Artifact.URL != "" {
+		return true
+	}
+
+	return false
 }
