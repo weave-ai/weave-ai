@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.11.0
+
+**Release date:** <TBD>
+
+- Add `stableml-zephyr-3b` to the model catalog
+
 ## v0.10.0
 
 **Release date:** 2023-12-05
