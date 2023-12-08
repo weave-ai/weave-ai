@@ -1,7 +1,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
-  name: stableml-zephyr-3b
+  name: stablelm-zephyr-3b
   labels:
     ai.contrib.fluxcd.io/artifact-kind: language-model
 spec:

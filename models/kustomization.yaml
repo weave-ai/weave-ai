@@ -7,7 +7,7 @@ resources:
 - ./mistral-7b-v0.1/ocirepo.yaml
 - ./mistrallite-7b/ocirepo.yaml
 - ./orca-2-7b/ocirepo.yaml
-- ./stableml-zephyr-3b/ocirepo.yaml
+- ./stablelm-zephyr-3b/ocirepo.yaml
 - ./tinyllama-1.1b-chat/ocirepo.yaml
 - ./yarn-mistral-7b-128k/ocirepo.yaml
 - ./zephyr-7b-alpha/ocirepo.yaml
