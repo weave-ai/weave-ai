@@ -8,6 +8,7 @@ All notable changes to this project are documented in this file.
 
 - Add `stablelm-zephyr-3b` to the model catalog
 - Fix isActive logic in the model activation process
+- Reconcile the model in its activation process
 
 ## v0.10.0
 
