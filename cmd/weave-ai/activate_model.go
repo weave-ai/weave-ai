@@ -93,13 +93,15 @@ func activateModel(ctx context.Context, client runtimeclient.Client, namespace s
 		return err
 	}
 
-	// try to activate the model if it's not active
-	if model.Spec.Suspend == true {
-		logger.Actionf("activate model %s/%s", namespace, name)
-		model.Spec.Suspend = false
-		if err := client.Update(ctx, model); err != nil {
-			return err
-		}
+	logger.Actionf("activate model %s/%s", namespace, name)
+	model.Spec.Suspend = false
+	// request a reconciliation
+	if model.Annotations == nil {
+		model.Annotations = map[string]string{}
+	}
+	model.Annotations[fluxmeta.ReconcileRequestAnnotation] = time.Now().Format(time.RFC3339Nano)
+	if err := client.Update(ctx, model); err != nil {
+		return err
 	}
 
 	if isActive(model) {
