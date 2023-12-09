@@ -1,15 +1,25 @@
 # Weave AI
 
-Weave AI is a collection of Flux controllers that manage the lifecycle of Large Language Models (LLMs) on Kubernetes.
+Weave AI is a collection of Flux controllers and CLI that manage the 
+lifecycle of Large Language Models (LLMs) on Kubernetes.
+
+**Weave AI CLI** aims to be the easiest way to onboard LLMs on Kubernetes, 
+and the **Weave AI controllers** manage the lifecycle of the LLMs, including
+training, serving, and monitoring of the models on production Kubernetes
+clusters.
 
 ## Getting started with Weave AI CLI
 
 ### CLI installation
 
+#### Install with CURL
 ```shell
 # CURL
 curl -s https://raw.githubusercontent.com/weave-ai/weave-ai/main/install/weave-ai.sh | sudo bash
+````
 
+#### Install with Homebrew
+```shell
 # or Homebrew
 brew install weave-ai/tap/weave-ai
 ```
