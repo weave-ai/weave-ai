@@ -43,9 +43,10 @@ weave-ai install
 var logger = stderrLogger{stderr: os.Stderr}
 
 type rootFlags struct {
-	timeout      time.Duration
-	verbose      bool
-	pollInterval time.Duration
+	timeout       time.Duration
+	verbose       bool
+	pollInterval  time.Duration
+	clusterDomain string
 }
 
 const defaultNamespace = "weave-ai"
@@ -59,6 +60,7 @@ var (
 func init() {
 	rootCmd.PersistentFlags().DurationVar(&rootArgs.timeout, "timeout", 5*time.Minute, "timeout for this operation")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.verbose, "verbose", false, "print generated objects")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.clusterDomain, "cluster-domain", "cluster.local", "cluster domain")
 
 	configureDefaultNamespace()
 	kubeconfigArgs.APIServer = nil // prevent AddFlags from configuring --server flag

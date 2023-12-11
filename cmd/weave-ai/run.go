@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
+	"io"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/weave-ai/weave-ai/pkg/utils"
@@ -51,6 +53,7 @@ var runFlags struct {
 	modelName      string
 	modelNamespace string
 	detach         bool // detach from the process e.g. not follow the logs
+	ui             bool // start the UI
 }
 
 func init() {
@@ -58,6 +61,8 @@ func init() {
 	runCmd.Flags().BoolVarP(&runFlags.publish, "publish", "p", false, "publish the LLM, which means it will be exposed as a LoadBalancer service")
 	runCmd.Flags().StringVarP(&runFlags.cpu, "cpu", "c", "4", "cpu")
 	runCmd.Flags().BoolVarP(&runFlags.detach, "detach", "d", false, "detach from the process e.g. not follow the logs")
+	runCmd.Flags().BoolVar(&runFlags.ui, "ui", false, "start the Weave Chat UI along side the LLM")
+
 	// TODO use the default namespace from context
 	runCmd.Flags().StringVarP(&runFlags.namespace, "namespace", "n", "default", "namespace")
 	rootCmd.AddCommand(runCmd)
@@ -180,15 +185,130 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("your LLM is ready at http://%s:8000", ip)
 	}
 
-	if !runFlags.detach {
-		pod := &corev1.PodList{}
-		if err := client.List(ctx, pod,
-			runtimeclient.InNamespace(runFlags.namespace),
-			runtimeclient.MatchingLabels{"app": lm.Name}); err != nil {
+	if runFlags.ui {
+		uiAppName := lmName + "-chat-app"
+		clusterDomain := rootArgs.clusterDomain
+
+		labels := map[string]string{"app": uiAppName}
+		ui := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      uiAppName,
+				Namespace: runFlags.namespace,
+				Labels:    labels,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion:         "ai.contrib.fluxcd.io/v1alpha1",
+						Kind:               "LanguageModel",
+						Name:               lm.Name,
+						UID:                lm.UID,
+						BlockOwnerDeletion: &[]bool{true}[0],
+						Controller:         &[]bool{true}[0],
+					},
+				},
+			},
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &[]int32{1}[0],
+				Selector: &metav1.LabelSelector{
+					MatchLabels: labels,
+				},
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: labels,
+					},
+					Spec: corev1.PodSpec{
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:    &[]int64{65532}[0],
+							RunAsNonRoot: &[]bool{true}[0],
+						},
+						Containers: []corev1.Container{
+							{
+								Name:  "chat-app",
+								Image: "ghcr.io/weave-ai/chatinfo:v0.1.0",
+								Env: []corev1.EnvVar{
+									{
+										Name:  "LLM_API_HOST",
+										Value: svc.Name + "." + runFlags.namespace + ".svc." + clusterDomain + ":8000",
+									},
+								},
+								SecurityContext: &corev1.SecurityContext{
+									Privileged:   &[]bool{false}[0],
+									RunAsNonRoot: &[]bool{true}[0],
+									RunAsUser:    &[]int64{65532}[0],
+									Capabilities: &corev1.Capabilities{
+										Drop: []corev1.Capability{
+											"ALL",
+										},
+									},
+								},
+								Ports: []corev1.ContainerPort{
+									{
+										ContainerPort: 8501,
+										Name:          "http",
+										Protocol:      corev1.ProtocolTCP,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		if err := client.Create(ctx, ui); err != nil {
 			return err
 		}
 
-		podName := pod.Items[0].Name
+		if !runFlags.detach {
+			logger.Waitingf("waiting for %s/%s to be ready", runFlags.namespace, uiAppName)
+			waitCtx, waitCancel := context.WithCancel(ctx)
+			wait.UntilWithContext(waitCtx, func(ctx context.Context) {
+				if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(ui), ui); err != nil {
+					return
+				}
+				var cond *appsv1.DeploymentCondition
+				for _, condition := range ui.Status.Conditions {
+					if condition.Type == appsv1.DeploymentAvailable {
+						cond = &condition
+						break
+					}
+				}
+				if cond == nil {
+					return
+				}
+				if cond.Status != corev1.ConditionTrue {
+					return
+				}
+				waitCancel()
+			}, 2*time.Second)
+		}
+	}
+
+	if !runFlags.detach {
+		pods := &corev1.PodList{}
+
+		// engine pods
+		matchingLabels := runtimeclient.MatchingLabels{"app": lm.Name}
+		podLogOpts := corev1.PodLogOptions{
+			Container: "engine",
+			Follow:    true,
+		}
+		// if UI is enabled, wait for the UI pod to be ready
+		if runFlags.ui {
+			matchingLabels["app"] = lm.Name + "-chat-app"
+			podLogOpts.Container = "chat-app"
+		}
+
+		if err := client.List(ctx, pods,
+			runtimeclient.InNamespace(runFlags.namespace),
+			matchingLabels,
+		); err != nil {
+			return err
+		}
+
+		podName := pods.Items[0].Name
 		config, err := utils.KubeConfig(kubeconfigArgs, kubeclientOptions)
 		if err != nil {
 			return err
@@ -198,14 +318,25 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		podLogOpts := corev1.PodLogOptions{
-			Container: "engine",
-			Follow:    true,
-		}
 		req := clientSet.CoreV1().Pods(runFlags.namespace).GetLogs(podName, &podLogOpts)
-		podLogs, err := req.Stream(context.Background())
-		if err != nil {
-			return err
+
+		var podLogs io.ReadCloser
+		i := 0
+		const MaxRetry = 10
+		for {
+			var err error
+			podLogs, err = req.Stream(context.Background())
+			if err != nil {
+				time.Sleep(1 * time.Second)
+				i = i + 1
+				if i > MaxRetry {
+					return err
+				}
+			}
+			break
+		}
+		if podLogs == nil {
+			return fmt.Errorf("could not get logs for pod %s/%s", runFlags.namespace, podName)
 		}
 		defer podLogs.Close()
 
