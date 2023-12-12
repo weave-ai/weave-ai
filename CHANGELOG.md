@@ -13,6 +13,8 @@ All notable changes to this project are documented in this file.
 - Add `llamaguard-7b` to the model catalog
 - Add an instruction to install unreleased versions
 - Update LM-controller to v0.9.0
+- Update llama-cpp-python to v0.2.22
+- Update chat-ui to v0.2.0
 
 ## v0.10.0
 

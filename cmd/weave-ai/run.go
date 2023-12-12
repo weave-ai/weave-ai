@@ -185,12 +185,13 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("your LLM is ready at http://%s:8000", ip)
 	}
 
+	var ui *appsv1.Deployment
 	if runFlags.ui {
 		uiAppName := lmName + "-chat-app"
 		clusterDomain := rootArgs.clusterDomain
 
 		labels := map[string]string{"app": uiAppName}
-		ui := &appsv1.Deployment{
+		ui = &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "apps/v1",
 				Kind:       "Deployment",
@@ -227,7 +228,7 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 						Containers: []corev1.Container{
 							{
 								Name:  "chat-app",
-								Image: "ghcr.io/weave-ai/chatinfo:v0.1.0",
+								Image: ImageChatInfo,
 								Env: []corev1.EnvVar{
 									{
 										Name:  "LLM_API_HOST",
@@ -350,6 +351,12 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				break
 			}
+		}
+	} else {
+		// if detached, shows kubectl port-forward commands
+		logger.Successf("to connect to your LLM:\n  kubectl port-forward -n %s svc/%s 8000:8000", svc.Namespace, svc.Name)
+		if runFlags.ui {
+			logger.Successf("to connect to the UI:\n  kubectl port-forward -n %s deploy/%s 8501:8501", ui.Namespace, ui.Name)
 		}
 	}
 
