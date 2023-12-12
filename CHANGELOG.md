@@ -12,6 +12,7 @@ All notable changes to this project are documented in this file.
 - Add `--ui` flag to the `run` command to start Chat UI for the current model
 - Add `llamaguard-7b` to the model catalog
 - Add an instruction to install unreleased versions
+- Update LM-controller to v0.9.0
 
 ## v0.10.0
 
