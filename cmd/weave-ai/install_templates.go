@@ -9,9 +9,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - namespace.yaml
-- "https://github.com/weave-ai/lm-controller/releases/download/v0.8.1/lm-controller.crds.yaml"
-- "https://github.com/weave-ai/lm-controller/releases/download/v0.8.1/lm-controller.rbac.yaml"
-- "https://github.com/weave-ai/lm-controller/releases/download/v0.8.1/lm-controller.deployment.yaml"
+- "https://github.com/weave-ai/lm-controller/releases/download/v0.9.0/lm-controller.crds.yaml"
+- "https://github.com/weave-ai/lm-controller/releases/download/v0.9.0/lm-controller.rbac.yaml"
+- "https://github.com/weave-ai/lm-controller/releases/download/v0.9.0/lm-controller.deployment.yaml"
 {{- if .WithModelCatalog }}
 - "https://github.com/weave-ai/weave-ai/releases/download/v{{ .Version }}/model-catalog.yaml"
 {{- end }}
