@@ -3,6 +3,7 @@ resources:
 - ./dragon-yi-6b/ocirepo.yaml
 - ./llama-2-7b-chat/ocirepo.yaml
 - ./llama-2-7b-instruct-32k/ocirepo.yaml
+- ./llamaguard-7b/ocirepo.yaml
 - ./mistral-7b-instruct-v0.1/ocirepo.yaml
 - ./mistral-7b-v0.1/ocirepo.yaml
 - ./mistrallite-7b/ocirepo.yaml

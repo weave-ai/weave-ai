@@ -1,0 +1,15 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: llamaguard-7b
+  labels:
+    ai.contrib.fluxcd.io/artifact-kind: language-model
+spec:
+  suspend: true # set this to false to build this LLM artifact
+  interval: 10m
+  url: oci://ghcr.io/weave-ai/models/llamaguard-7b
+  ref:
+    tag: v0.1.0-q4km-gguf
+  layerSelector:
+    mediaType: "application/vnd.cncf.flux.content.v1.tar+gzip"
+    operation: copy
