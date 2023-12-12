@@ -11,6 +11,7 @@ All notable changes to this project are documented in this file.
 - Reconcile the model in its activation process
 - Add `--ui` flag to the `run` command to start Chat UI for the current model
 - Add `llamaguard-7b` to the model catalog
+- Add an instruction to install unreleased versions
 
 ## v0.10.0
 
