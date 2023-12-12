@@ -262,29 +262,29 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if !runFlags.detach {
-			logger.Waitingf("waiting for %s/%s to be ready", runFlags.namespace, uiAppName)
-			waitCtx, waitCancel := context.WithCancel(ctx)
-			wait.UntilWithContext(waitCtx, func(ctx context.Context) {
-				if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(ui), ui); err != nil {
-					return
+		// wait is good for the UI to be ready
+		logger.Waitingf("waiting for %s/%s to be ready", runFlags.namespace, uiAppName)
+		waitCtx, waitCancel := context.WithCancel(ctx)
+		wait.UntilWithContext(waitCtx, func(ctx context.Context) {
+			if err := client.Get(ctx, runtimeclient.ObjectKeyFromObject(ui), ui); err != nil {
+				return
+			}
+			var cond *appsv1.DeploymentCondition
+			for _, condition := range ui.Status.Conditions {
+				if condition.Type == appsv1.DeploymentAvailable {
+					cond = &condition
+					break
 				}
-				var cond *appsv1.DeploymentCondition
-				for _, condition := range ui.Status.Conditions {
-					if condition.Type == appsv1.DeploymentAvailable {
-						cond = &condition
-						break
-					}
-				}
-				if cond == nil {
-					return
-				}
-				if cond.Status != corev1.ConditionTrue {
-					return
-				}
-				waitCancel()
-			}, 2*time.Second)
-		}
+			}
+			if cond == nil {
+				return
+			}
+			if cond.Status != corev1.ConditionTrue {
+				return
+			}
+			waitCancel()
+		}, 2*time.Second)
+
 	}
 
 	if !runFlags.detach {
