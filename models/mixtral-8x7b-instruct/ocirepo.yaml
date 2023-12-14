@@ -1,0 +1,15 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: mixtral-8x7b-instruct
+  labels:
+    ai.contrib.fluxcd.io/artifact-kind: language-model    
+spec:
+  suspend: true # set this to false to build this LLM artifact
+  interval: 10m
+  url: oci://ghcr.io/weave-ai/models/mixtral-8x7b-instruct
+  ref:
+    tag: v0.1.0-q5km-gguf
+  layerSelector:
+    mediaType: "application/vnd.cncf.flux.content.v1.tar+gzip"
+    operation: copy

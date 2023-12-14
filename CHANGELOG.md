@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.12.0
+
+**Release date:** TBD
+
+- Add `mixtral-8x7b-instruct` to the model catalog
+- Update LM-controller to `v0.10.0`
+- Update llama-cpp-python to `v0.2.23`
+
 ## v0.11.0
 
 **Release date:** 2023-12-13
