@@ -192,7 +192,9 @@ Finally, to remove the LM instance and the associated UI, execute:
 
 ```shell
 kubectl delete lm/my-model
-languagemodel.ai.contrib.fluxcd.io "my-model" deleted
 ```
 
-This command deletes the specified language model instance from your cluster, along with the default chat UI if any.
+This command deletes the specified language model instance from your cluster, also with the default chat UI if you've created one.
+```
+languagemodel.ai.contrib.fluxcd.io "my-model" deleted
+```
