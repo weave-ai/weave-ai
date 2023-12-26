@@ -184,7 +184,7 @@ kubectl port-forward -n default deploy/my-model-chat-app 8501:8501
 
 Then open your browser to `http://localhost:8501` to try the model via our quick chat app.
 
-[picture]
+![Chat UI](https://github.com/weave-ai/weave-ai/assets/10666/ff6e624e-90d5-42d9-9197-245619b1c4fa)
 
 ## Delete the LM instance.
 
