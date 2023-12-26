@@ -35,3 +35,7 @@ flux install --network-policy=false
 weave-ai install
 weave-ai run -p zephyr-7b-beta
 ```
+
+### What's next?
+
+To learn more about Weave AI, a step by step guide can be found [here](docs/GETTING_STARTED.md).
