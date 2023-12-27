@@ -6,9 +6,9 @@ All notable changes to this project are documented in this file.
 
 **Release date:** TBD
 
-- Add `mixtral-8x7b-instruct` to the model catalog
 - Update LM-controller to `v0.10.0`
 - Update llama-cpp-python to `v0.2.23`
+- Add labels and the service object to the UI
 
 ## v0.11.0
 
