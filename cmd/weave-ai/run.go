@@ -6,6 +6,7 @@ import (
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	"io"
 	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/weave-ai/weave-ai/pkg/utils"
@@ -54,6 +55,7 @@ var runFlags struct {
 	modelNamespace string
 	detach         bool // detach from the process e.g. not follow the logs
 	ui             bool // start the UI
+	local          bool // run the LLM locally
 }
 
 func init() {
@@ -62,6 +64,7 @@ func init() {
 	runCmd.Flags().StringVarP(&runFlags.cpu, "cpu", "c", "4", "cpu")
 	runCmd.Flags().BoolVarP(&runFlags.detach, "detach", "d", false, "detach from the process e.g. not follow the logs")
 	runCmd.Flags().BoolVar(&runFlags.ui, "ui", false, "start the Weave Chat UI along side the LLM")
+	// runCmd.Flags().BoolVar(&runFlags.local, "local", false, "run the LLM locally")
 
 	// TODO use the default namespace from context
 	runCmd.Flags().StringVarP(&runFlags.namespace, "namespace", "n", "default", "namespace")
@@ -69,6 +72,36 @@ func init() {
 }
 
 func runCmdRun(cmd *cobra.Command, args []string) error {
+	if runFlags.local {
+		return runCmdRunLocal(cmd, args)
+	}
+	return runCmdRun0(cmd, args)
+}
+
+func runCmdRunLocal(cmd *cobra.Command, args []string) error {
+	/*
+		modelName := args[0]
+		// if model name contains / split it into model namespace and model name
+		if strings.Contains(modelName, "/") {
+			split := strings.SplitN(modelName, "/", 2)
+			runFlags.modelNamespace = split[0]
+			runFlags.modelName = split[1]
+		} else {
+			runFlags.modelName = modelName
+			runFlags.modelNamespace = defaultNamespace
+		}
+
+		// 1. check ~/.weave-ai/bin
+		// 2. download https://github.com/Mozilla-Ocho/llamafile/releases/download/0.4/llamafile-0.4
+		// 3. rename to llamafile
+		// 4. chmod +x llamafile
+		// 5. move to ~/.weave-ai/bin
+		// 6. run llamafile run
+	*/
+	return nil
+}
+
+func runCmdRun0(cmd *cobra.Command, args []string) error {
 	modelName := args[0]
 	// if model name contains / split it into model namespace and model name
 	if strings.Contains(modelName, "/") {
@@ -99,6 +132,10 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      lmName,
 			Namespace: runFlags.namespace,
+			Labels: map[string]string{
+				"ai.contrib.fluxcd.io/model-namespace": runFlags.modelNamespace,
+				"ai.contrib.fluxcd.io/model":           runFlags.modelName,
+			},
 		},
 		Spec: aiv1a1.LanguageModelSpec{
 			SourceRef: aiv1a1.CrossNamespaceSourceReference{
@@ -185,10 +222,24 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		logger.Successf("your LLM is ready at http://%s:8000", ip)
 	}
 
-	var ui *appsv1.Deployment
+	var (
+		ui    *appsv1.Deployment
+		uiSvc *corev1.Service
+	)
+
 	if runFlags.ui {
 		uiAppName := lmName + "-chat-app"
 		clusterDomain := rootArgs.clusterDomain
+		ownerRefs := []metav1.OwnerReference{
+			{
+				APIVersion:         "ai.contrib.fluxcd.io/v1alpha1",
+				Kind:               "LanguageModel",
+				Name:               lm.Name,
+				UID:                lm.UID,
+				BlockOwnerDeletion: &[]bool{true}[0],
+				Controller:         &[]bool{true}[0],
+			},
+		}
 
 		labels := map[string]string{"app": uiAppName}
 		ui = &appsv1.Deployment{
@@ -197,19 +248,10 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 				Kind:       "Deployment",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      uiAppName,
-				Namespace: runFlags.namespace,
-				Labels:    labels,
-				OwnerReferences: []metav1.OwnerReference{
-					{
-						APIVersion:         "ai.contrib.fluxcd.io/v1alpha1",
-						Kind:               "LanguageModel",
-						Name:               lm.Name,
-						UID:                lm.UID,
-						BlockOwnerDeletion: &[]bool{true}[0],
-						Controller:         &[]bool{true}[0],
-					},
-				},
+				Name:            uiAppName,
+				Namespace:       runFlags.namespace,
+				Labels:          labels,
+				OwnerReferences: ownerRefs,
 			},
 			Spec: appsv1.DeploymentSpec{
 				Replicas: &[]int32{1}[0],
@@ -262,6 +304,34 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
+		uiSvc = &corev1.Service{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Service",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            uiAppName,
+				Namespace:       runFlags.namespace,
+				Labels:          labels,
+				OwnerReferences: ownerRefs,
+			},
+			Spec: corev1.ServiceSpec{
+				Selector: labels,
+				Type:     corev1.ServiceTypeClusterIP,
+				Ports: []corev1.ServicePort{
+					{
+						Name:       "http",
+						Port:       8501,
+						TargetPort: intstr.FromInt32(8501),
+					},
+				},
+			},
+		}
+
+		if err := client.Create(ctx, uiSvc); err != nil {
+			return err
+		}
+
 		// wait is good for the UI to be ready
 		logger.Waitingf("waiting for %s/%s to be ready", runFlags.namespace, uiAppName)
 		waitCtx, waitCancel := context.WithCancel(ctx)
@@ -296,6 +366,7 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 			Container: "engine",
 			Follow:    true,
 		}
+
 		// if UI is enabled, wait for the UI pod to be ready
 		if runFlags.ui {
 			matchingLabels["app"] = lm.Name + "-chat-app"
@@ -356,7 +427,7 @@ func runCmdRun(cmd *cobra.Command, args []string) error {
 		// if detached, shows kubectl port-forward commands
 		logger.Successf("to connect to your LLM:\n  kubectl port-forward -n %s svc/%s 8000:8000", svc.Namespace, svc.Name)
 		if runFlags.ui {
-			logger.Successf("to connect to the UI:\n  kubectl port-forward -n %s deploy/%s 8501:8501", ui.Namespace, ui.Name)
+			logger.Successf("to connect to the UI:\n  kubectl port-forward -n %s svc/%s 8501:8501", uiSvc.Namespace, uiSvc.Name)
 		}
 	}
 
