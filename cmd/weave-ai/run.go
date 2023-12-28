@@ -42,6 +42,22 @@ weave-ai run weave-ai/zephyr-7b-beta
 
 # Deploy and run an LLM, e.g. zephyr-7b-beta, in the default namespace and publish it as a LoadBalancer service.
 weave-ai run -p -d weave-ai/zephyr-7b-beta
+
+# Run zephyr-7b-beta using 6 CPU units.
+weave-ai run -c 6 zephyr-7b-beta
+
+# Run zephyr-7b-beta with 8 CPUs, detached, and named 'llm-test'.
+weave-ai run -c 8 -d --name=llm-test zephyr-7b-beta
+
+# Run zephyr-7b-beta in a custom namespace 'dev-space'.
+weave-ai run -n dev-space zephyr-7b-beta
+
+# Deploys zephyr-7b-beta in 'prod-space', as a LoadBalancer service with UI.
+weave-ai run -n prod-space -p --ui zephyr-7b-beta
+
+# Runs zephyr-7b-beta with 5 CPUs, in 'test-space', 
+# detached, named 'llm-prod', published as a service with UI.
+weave-ai run -c 5 -n test-space -d --name=llm-prod -p --ui zephyr-7b-beta
 `,
 	RunE: runCmdRun,
 }
@@ -59,15 +75,15 @@ var runFlags struct {
 }
 
 func init() {
-	runCmd.Flags().StringVar(&runFlags.name, "name", "", "name of the LLM")
-	runCmd.Flags().BoolVarP(&runFlags.publish, "publish", "p", false, "publish the LLM, which means it will be exposed as a LoadBalancer service")
-	runCmd.Flags().StringVarP(&runFlags.cpu, "cpu", "c", "4", "cpu")
-	runCmd.Flags().BoolVarP(&runFlags.detach, "detach", "d", false, "detach from the process e.g. not follow the logs")
-	runCmd.Flags().BoolVar(&runFlags.ui, "ui", false, "start the Weave Chat UI along side the LLM")
+	runCmd.Flags().StringVarP(&runFlags.cpu, "cpu", "c", "4", "specifies CPU resources for the LLM")
+	runCmd.Flags().BoolVarP(&runFlags.detach, "detach", "d", false, "detaches from the Pod session, allowing the LLM to run in the background without showing logs")
+	runCmd.Flags().StringVar(&runFlags.name, "name", "", "assigns a name to the LLM instance for identification")
+	runCmd.Flags().BoolVarP(&runFlags.publish, "publish", "p", false, "makes the LLM available as a network-accessible LoadBalancer service")
+	runCmd.Flags().BoolVar(&runFlags.ui, "ui", false, "starts the Weave Chat UI with the LLM for graphical interaction")
 	// runCmd.Flags().BoolVar(&runFlags.local, "local", false, "run the LLM locally")
 
 	// TODO use the default namespace from context
-	runCmd.Flags().StringVarP(&runFlags.namespace, "namespace", "n", "default", "namespace")
+	runCmd.Flags().StringVarP(&runFlags.namespace, "namespace", "n", "default", "runs the LLM in the specific namespace")
 	rootCmd.AddCommand(runCmd)
 }
 

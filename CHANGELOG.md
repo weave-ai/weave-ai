@@ -4,11 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## v0.12.0
 
-**Release date:** TBD
+**Release date:** 2023-12-28
 
 - Update LM-controller to `v0.10.0`
 - Update llama-cpp-python to `v0.2.23`
 - Add labels and the service object to the UI
+- Improve documentations for the `weave-ai run` command
 
 ## v0.11.0
 
