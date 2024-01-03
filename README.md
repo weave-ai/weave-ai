@@ -178,7 +178,6 @@ weave-ai/zephyr-7b-beta            v1.0.0-q5km-gguf          INACTIVE  1 minute 
 
 ### Step 6: Create and run a model instance.
 
-Step 6: Create and Run a Model Instance
 To activate and run a model, use the following command:
 
 ```shell
